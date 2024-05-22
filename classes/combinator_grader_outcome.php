@@ -17,23 +17,41 @@
 /** Defines a subclass of the normal coderunner testing_outcome for use when
  * a combinator template grader is used.
  *
- * @package    qtype
- * @subpackage coderunner
+ * @package    qtype_coderunner
  * @copyright  Richard Lobb, 2013, The University of Canterbury
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
-defined('MOODLE_INTERNAL') || die();
 use qtype_coderunner\constants;
 
 class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testing_outcome {
 
+    /** @var ?string Html that is displayed before the result table. */
+    public $epiloguehtml;
+
+    /** @var ?string Html that is displayed after the result table. */
+    public $prologuehtml;
+
+    /** @var array A per-column array of %s (string) or %h (html) values to control column formatting */
+    public $columnformats;
+
+    /** @var bool If true, the question does not display the result table and no grading. */
+    public $outputonly;
+
+    /** @var ?string HTML feedback set for teacher that is hidden from student. */
+    public $instructorhtml;
+
+    /** @var ?number The grade, out of 1. */
+    public $fraction;
+
+    /** @var bool If true, is used when the question is to be used only to display the output and perhaps images from a run, with no mark. */
+    public $showoutputonly;
+
     // A list of the allowed attributes in the combinator template grader return value.
-    public $allowedfields = array('fraction', 'prologuehtml', 'testresults', 'epiloguehtml',
+    public $allowedfields = ['fraction', 'prologuehtml', 'testresults', 'epiloguehtml',
                     'feedbackhtml', 'columnformats', 'showdifferences',
-                    'showoutputonly', 'graderstate'
-    );
+                    'showoutputonly', 'graderstate', 'instructorhtml',
+    ];
 
     public function __construct($isprecheck) {
         parent::__construct(1, 0, $isprecheck);
@@ -43,6 +61,7 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
         $this->testresults = null;
         $this->columnformats = null;
         $this->outputonly = false;
+        $this->instructorhtml = null;
     }
 
 
@@ -84,12 +103,92 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
         return isset($this->outputonly) && $this->outputonly;
     }
 
+
+    /**
+     * Return a message describing the first failing test, to the extent
+     * possible. Only called if there is a valid 'correct' column.
+     * @return string HTML error message describing the first validation failure.
+     */
+    private function format_first_failing_test($correctcol) {
+        $error = '';
+        foreach (array_slice($this->testresults, 1) as $row) {
+            if (!$row[$hascorrect]) {
+                $n = count($row);
+                for ($i = 0; $i < $n; $i++) {
+                    if ($headerrow[$i] != 'iscorrect') {
+                        $cell = htmlspecialchars($row[$i]);
+                        $error .= "{$headerrow[$i]}: <pre>$cell</pre>";
+                    }
+                }
+                break;
+            }
+        }
+        return $error;
+    }
+
+
+    /**
+     * Return a table describing all the validation failures.
+     * @param int $correctcol The table column number of the 'iscorrect' column.
+     * @param int $expectedcol The table column number of the 'Expected' column.
+     * @param int $gotcol The table column number of the 'Got' column.
+     * @return string An HTML table with one row for each failed test case, and
+     * a button to copy the 'got' column into the 'expected' column of the test
+     * case.
+     */
+    private function make_validation_fail_table($correctcol, $expectedcol, $gotcol, $sanitise) {
+        $error = '';
+        $rownum = 0;
+        $codecol = array_search(get_string('testcolhdr', 'qtype_coderunner'), $this->testresults[0]);
+        foreach (array_slice($this->testresults, 1) as $row) {
+            if (!$row[$correctcol]) {
+                if ($codecol !== false) {
+                    $code = $row[$codecol];
+                } else {
+                    $code = '';
+                }
+                $this->add_failed_test($rownum, $code, $row[$expectedcol], $row[$gotcol], $sanitise);
+            }
+            $rownum += 1;
+        }
+        return html_writer::table($this->failures) . get_string('replaceexpectedwithgot', 'qtype_coderunner');
+    }
+
+
+    /**
+     * Check if a column is formatted in raw HTML. Messy, because the column
+     * formats array does not include is ishidden and iscorrect fields.
+
+     * @param int $col
+     * @return bool true if the given column is to be displayed in html
+     */
+    private function is_html_column($col) {
+        $hdrs = $this->testresults[0];
+        $formats = $this->columnformats;
+        if (!$formats) {
+            return false;
+        }
+        $i = 0;    // Column number.
+        $icol = 0; // Column number excluding ishidden and iscorrect.
+        while ($i < count($hdrs)) {
+            if ($hdrs[$i] != 'iscorrect' && $hdrs[$i] != 'ishidden') {
+                if ($i == $col) {
+                    $ishtml = $formats[$icol] == '%h';
+                    return $ishtml;
+                }
+                $icol += 1;
+            }
+            $i++;
+        }
+        return false;
+    }
+
     /**
      * Construct a customised error message for combinator grading outcomes if
-     * practicable. Use the prologuehtml field (if given) followed by the first
-     * wrong row of the result table if this table has been defined and if it
-     * contains an 'iscorrect' column.
-     * @return type
+     * practicable. Use the prologuehtml field (if given) followed by a table
+     * of all the failing tests in the result table if this table has been defined
+     * and if it contains an 'iscorrect' column.
+     * @return string An HTML error message.
      */
     public function validation_error_message() {
         $error = '';
@@ -98,25 +197,26 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
         }
         if (!empty($this->testresults)) {
             $headerrow = $this->testresults[0];
-            $iscorrectcol = array_search('iscorrect', $headerrow);
-            if ($iscorrectcol !== false) {
-                // Table has the optional 'iscorrect' column so find first fail.
-                foreach (array_slice($this->testresults, 1) as $row) {
-                    if (!$row[$iscorrectcol]) {
-                        $error .= "First failing test:<br>";
-                        for ($i = 0; $i < count($row); $i++) {
-                            if ($headerrow[$i] != 'iscorrect' &&
-                                    $headerrow[$i] != 'ishidden') {
-                                $cell = htmlspecialchars($row[$i]);
-                                $error .= "{$headerrow[$i]}: <pre>$cell</pre>";
-                            }
-                        }
-                        break;
-                    }
-                }
+            $correctcol = array_search('iscorrect', $headerrow);
+            $expectedcol = array_search(get_string('expectedcolhdr', 'qtype_coderunner'), $headerrow);
+            $gotcol = array_search(get_string('gotcolhdr', 'qtype_coderunner'), $headerrow);
+            $sanitise = true;
+            if ($correctcol !== false && $expectedcol !== false && $gotcol !== false) {
+                // This looks like a pretty conventional results table, so we can
+                // try using the parent way of formatting the failed test cases, with
+                // copy-got-to-expected button.
+
+                $sanitise = !$this->is_html_column($gotcol);
+                $error .= $this->make_validation_fail_table($correctcol, $expectedcol, $gotcol, $sanitise);
+            } else if ($correctcol) {
+                // Can't use the fancy table presentation as missing got and/or
+                // expected. So just make a simple 'first failing test' string.
+                $error .= $this->format_first_failing_test($correctcol, $sanitise);
             }
         }
-        return $error . parent::validation_error_message();
+
+        $error .= '<br>' . parent::validation_error_message();
+        return $error;
     }
 
     // Getter methods for use by renderer.
@@ -163,14 +263,16 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
         } else {
             $formats = $this->columnformats;
             $columnheaders = $table[0];
-            $newtable = array($columnheaders);
-            for ($i = 1; $i < count($table); $i++) {
+            $newtable = [$columnheaders];
+            $nrows = count($table);
+            for ($i = 1; $i < $nrows; $i++) {
                 $row = $table[$i];
-                $newrow = array();
+                $newrow = [];
                 $formatindex = 0;
-                for ($col = 0; $col < count($row); $col++) {
+                $ncols = count($row);
+                for ($col = 0; $col < $ncols; $col++) {
                     $cell = $row[$col];
-                    if (in_array($columnheaders[$col], array('ishidden', 'iscorrect'))) {
+                    if (in_array($columnheaders[$col], ['ishidden', 'iscorrect'])) {
                         $newrow[] = $cell;  // Copy control column values directly.
                     } else {
                         // Non-control columns are either '%s' or '%h' format.
@@ -192,7 +294,17 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
     }
 
     public function get_epilogue() {
-        return empty($this->epiloguehtml) ? '' : $this->epiloguehtml;
+        if (empty($this->instructorhtml)) {
+            $this->instructorhtml = '';
+        }
+        if (empty($this->epiloguehtml)) {
+            $this->epiloguehtml = '';
+        }
+        if (self::can_view_hidden()) {
+            return $this->instructorhtml . $this->epiloguehtml;
+        } else {
+            return $this->epiloguehtml;
+        }
     }
 
     public function show_differences() {
@@ -217,16 +329,21 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
                     $numcols += 1;
                 }
             }
-            $blah = count($this->columnformats);
             if (count($this->columnformats) !== $numcols) {
-                $error = get_string('wrongnumberofformats', 'qtype_coderunner',
-                        array('expected' => $numcols, 'got' => count($this->columnformats)));
+                $error = get_string(
+                    'wrongnumberofformats',
+                    'qtype_coderunner',
+                    ['expected' => $numcols, 'got' => count($this->columnformats)]
+                );
                 $this->set_status(self::STATUS_BAD_COMBINATOR, $error);
             } else {
                 foreach ($this->columnformats as $format) {
                     if ($format !== '%s' && $format !== '%h') {
-                        $error = get_string('illegalformat', 'qtype_coderunner',
-                            array('format' => $format));
+                        $error = get_string(
+                            'illegalformat',
+                            'qtype_coderunner',
+                            ['format' => $format]
+                        );
                         $this->set_status(self::STATUS_BAD_COMBINATOR, $error);
                         break;
                     }
@@ -242,7 +359,8 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
     private static function visible_rows($resulttable) {
         $header = $resulttable[0];
         $ishiddencolumn = -1;
-        for ($i = 0; $i < count($header); $i++) {
+        $n = count($header);
+        for ($i = 0; $i < $n; $i++) {
             if (strtolower($header[$i]) === 'ishidden') {
                 $ishiddencolumn = $i;
             }
@@ -250,8 +368,9 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
         if ($ishiddencolumn === -1) {
             return $resulttable;  // No ishidden column so all rows visible.
         } else {
-            $rows = array($header);
-            for ($i = 1; $i < count($resulttable); $i++) {
+            $rows = [$header];
+            $n = count($resulttable);
+            for ($i = 1; $i < $n; $i++) {
                 $row = $resulttable[$i];
                 if (!$row[$ishiddencolumn]) {
                     $rows[] = $row;
@@ -259,6 +378,5 @@ class qtype_coderunner_combinator_grader_outcome extends qtype_coderunner_testin
             }
             return $rows;
         }
-
     }
 }

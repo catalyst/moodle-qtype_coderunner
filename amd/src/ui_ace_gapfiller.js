@@ -58,8 +58,7 @@ define(['jquery'], function($) {
 
     var Range;  // Can't load this until ace has loaded.
     const fillChar = " ";
-    const validChars = /[ !"#$%&'()*+,`\-./0-9:;<=>?@A-Z\[\]\\^_a-z{}|~]/;
-    const ACE_DARK_THEME = 'ace/theme/tomorrow_night';
+    const validChars = /[ !"#$%&'()*+,`\-./0-9\p{L}:;<=>?@\[\]\\^_{}|~]/u;
     const ACE_LIGHT_THEME = 'ace/theme/textmate';
 
     /**
@@ -121,11 +120,8 @@ define(['jquery'], function($) {
             });
             this.editor.$blockScrolling = Infinity;
 
-            // Set theme to dark if user-prefers-color-scheme is dark,
-            // else use the uiParams theme if provided else use light.
-            if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                this.editor.setTheme(ACE_DARK_THEME);
-            } else if (uiParams.theme) {
+            // Use the uiParams theme if provided else use light.
+            if (uiParams.theme) {
                 this.editor.setTheme("ace/theme/" + uiParams.theme);
             } else {
                 this.editor.setTheme(ACE_LIGHT_THEME);
@@ -389,6 +385,9 @@ define(['jquery'], function($) {
 
     // Sync to TextArea
     AceGapfillerUi.prototype.sync = function() {
+        if (this.fail) {
+            return; // Leave the text area alone if Ace load failed.
+        }
         let serialisation = [];  // A list of field values.
         let empty = true;
 
@@ -406,6 +405,10 @@ define(['jquery'], function($) {
             this.textArea.val(JSON.stringify(serialisation));
         }
     };
+
+    // Sync every 2 seconds in case quiz closes automatically without user
+    // action.
+    AceGapfillerUi.prototype.syncIntervalSecs = (() => 2);
 
     // Reload the HTML fields from the given serialisation.
     AceGapfillerUi.prototype.reload = function() {
@@ -557,6 +560,15 @@ define(['jquery'], function($) {
         this.editNode.outerHeight(h);
         this.editNode.outerWidth(w);
         this.editor.resize();
+    };
+
+    /**
+     * Allow fullscreen mode for the Ace Gapfiller UI.
+     *
+     * @return {Boolean} True if fullscreen mode is allowed, false otherwise.
+     */
+    AceGapfillerUi.prototype.allowFullScreen = function() {
+        return true;
     };
 
     /**

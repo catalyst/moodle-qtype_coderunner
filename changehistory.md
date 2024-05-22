@@ -1,5 +1,70 @@
 # CHANGE HISTORY
 
+### 11 February 2024. 5.3.0
+
+ * Significant refactoring to improve PHP8.2 compatibility, particularly with regard to dynamic attributes (thanks Anupama).
+ * Improve code to identify Java main class (thanks zupanibla).
+ * Bug fix: ace-gapfiller UI did not allow non-ASCII alphabetic characters (e.g. Maori macrons)
+
+### 20 December 2023. 5.2.4
+
+ * Extensive code tidying to conform to latest Moodle PHP coding standards.
+ * Issue #145: some testcases didn't check if the sandbox were available before running the
+   test, causing test failure.
+ * Bug fix: locked_cell functionality in table UI was not working (regression mid-year)
+ * Improve error reporting when Jobe request fails. 
+ * Issue #182: LaTeX embedded in question feedback was not being processed by MathJax
+ * Extended the copy-got-to-expected functionality when a saved question failed validation
+   to include combinator graders under certain specified conditions.
+ * Criterion to delete prototypes from system context tighten to delete only prototypes with
+   the string BUILT_IN in their names.
+ * Issue #181: Scratchpad UI errors were displayed as JavaScript alerts. Changed to show inline.
+ * Issue #179: Multilanguage question type extended to handle Perl, Ruby, C# and Golang
+ * Improve twig error messages
+ * Strip white space from node and edge labels in GraphUI
+
+### 18 September 2023. 5.2.2
+
+ * Upgrade from MATURITY_RELEASE_CANDIDATE to MATURITY_STABLE
+
+### 8 September 2023. 5.2.1
+
+ * Major change: add scratchpad UI (thanks James Napier). This provides students
+   with a mini IDE within each question, where they can test their code without
+   making actual Moodle submissions. Requires the coderunner web service to be
+   enabled.
+ * Added several UI parameters to Ace editor: auto_switch_light_dark, font_size,
+   import_from_scratchpad, live_autocompletion, theme.
+ * Better error messages for missing/duplicate prototypes.
+ * Changes to better support the ace-inline filter (e.g. language checking
+   to improve error message if question author has a typo).
+ * Make Ace user changes to theme (via Ctrl + ',') sticky.
+ * Reduce sync interval time in Ace UI from 5 secs to 2 secs to reduce data loss
+   if a quiz times out. Also, reduce default timeout for all UIs from 10s to 5s.
+ * Use HTML input elements in the Table UI rather than textareas when there is
+   only 1 row per cell to reduce confusion when student hits Enter.
+ * Set specific column widths for SQL questions for compatibility with latest
+   sqlite3.
+ * Change multilanguage question type so that answer code cannot be entered
+   until a language has been selected but the user can step through
+   the question (unanswered) without being required to select a language.
+ * Prevent grading of an unchanged preloaded answer.
+ * Add instructorhtml functionality to combinator grader so that a teacher can
+   see HTML feedback that's hidden from student.
+ * Changed implementation of per-user rate throttling for web-service traffic
+   to reduce the risk of log-manager SQL queries causing hangs (if that was
+   indeed happening - problem was never fully diagnosed).
+ * Issue a specific "URL blocked" error message when Moodle HTML security
+   is blocking outgoing HTTP requests.
+ * Some changes for PHP 8.1/8.2 compatibility.
+ * Various code tidying.
+ * Bug fix: the UI parameters were not being loaded correctly for non-Ace UIs
+   when the question type was first selected.
+ * Bug fix: the UI parameters from the prototype should be ignored if
+    the UI has changed from that of the prototype.
+ * Bug fix: sample answer attachments were not being included when previewing
+   or bulk testing.
+
 ### 9 November 2022. 5.1.1
 
  * Tweak to AJAX code to allow CodeRunner to run in Docker Desktop on Linux

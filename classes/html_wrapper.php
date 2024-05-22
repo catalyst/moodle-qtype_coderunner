@@ -17,17 +17,15 @@
 /** Defines a simple class used to wrap an HTML string as a way of flagging
  * to code that tries to use it that further conversion to HTML must not be done.
  *
- * @package    qtype
- * @subpackage coderunner
+ * @package    qtype_coderunner
  * @copyright  Richard Lobb, 2016, The University of Canterbury
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
-defined('MOODLE_INTERNAL') || die();
-
-
 class qtype_coderunner_html_wrapper {
+
+    /** @var string */
+    private $html;
 
     public function __construct($html) {
         $this->html = $html;
@@ -38,5 +36,3 @@ class qtype_coderunner_html_wrapper {
         return $this->html;
     }
 }
-
-

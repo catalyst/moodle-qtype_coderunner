@@ -36,6 +36,7 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 /**
  * Unit tests for CodeRunner restore code.
  *
+ * @coversNothing
  * @copyright  2016 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -72,10 +73,18 @@ class restore_test extends \advanced_testcase {
 
         // Restore one of the example backups.
         $newcourseid = \restore_dbops::create_new_course(
-                'Restore test', 'RT100', $this->category->id);
-        $rc = new \restore_controller($folder, $newcourseid,
-                \backup::INTERACTIVE_NO, \backup::MODE_GENERAL, $USER->id,
-                \backup::TARGET_NEW_COURSE);
+            'Restore test',
+            'RT100',
+            $this->category->id
+        );
+        $rc = new \restore_controller(
+            $folder,
+            $newcourseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE
+        );
         $this->assertTrue($rc->execute_precheck());
         $rc->execute_plan();
         $rc->destroy();
@@ -92,12 +101,18 @@ class restore_test extends \advanced_testcase {
      */
     protected function load_question_data_by_name($name) {
         global $DB;
-        $questionid = $DB->get_field('question', 'id', array('name' => $name), MUST_EXIST);
-        return array(
-                $DB->get_record('question_coderunner_options',
-                        array('questionid' => $questionid), '*', MUST_EXIST),
-                $DB->get_records('question_coderunner_tests',
-                        array('questionid' => $questionid)));
+        $questionid = $DB->get_field('question', 'id', ['name' => $name], MUST_EXIST);
+        return [
+                $DB->get_record(
+                    'question_coderunner_options',
+                    ['questionid' => $questionid],
+                    '*',
+                    MUST_EXIST
+                ),
+                $DB->get_records(
+                    'question_coderunner_tests',
+                    ['questionid' => $questionid]
+                )];
     }
 
     public function test_restore() {
@@ -107,11 +122,11 @@ class restore_test extends \advanced_testcase {
                 '/question/type/coderunner/tests/fixtures/loadtesting_pseudocourse_backup.mbz');
 
         // Verify some restored questions look OK.
-        list($options, $tests) = $question = $this->load_question_data_by_name('c_to_fpy3');
+        [$options, $tests] = $this->load_question_data_by_name('c_to_fpy3');
         $this->assertCount(3, $tests);
         $this->assertNull($options->template);
 
-        list($options, $tests) = $this->load_question_data_by_name('PROTOTYPE_clojure_with_combinator');
+        [$options, $tests] = $this->load_question_data_by_name('PROTOTYPE_clojure_with_combinator');
         $this->assertCount(1, $tests);
         $this->assertStringStartsWith('import subprocess', $options->template);
     }
@@ -123,11 +138,11 @@ class restore_test extends \advanced_testcase {
                 '/question/type/coderunner/tests/fixtures/loadtesting_pseudocourse_backup_V3.0.0.mbz');
 
         // Verify some restored questions look OK.
-        list($options, $tests) = $question = $this->load_question_data_by_name('c_to_fpy3');
+        [$options, $tests] = $this->load_question_data_by_name('c_to_fpy3');
         $this->assertCount(3, $tests);
         $this->assertNull($options->template);
 
-        list($options, $tests) = $this->load_question_data_by_name('PROTOTYPE_clojure_with_combinator');
+        [$options, $tests] = $this->load_question_data_by_name('PROTOTYPE_clojure_with_combinator');
         $this->assertCount(1, $tests);
         $this->assertStringStartsWith('import subprocess', $options->template);
     }

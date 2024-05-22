@@ -5,7 +5,8 @@ Feature: Check that Python and other languages can be used instead of Twig as a 
   I should be able to write a function that prints the seed and my username it should be marked right
 
   Background:
-    Given the following "users" exist:
+    Given the CodeRunner test configuration file is loaded
+    And the following "users" exist:
       | username | firstname       | lastname  | email            |
       | teacher1 | Teacher         | Last      | teacher1@asd.com |
       | student1 | Student First   | O'Connell | student@asd.com  |
@@ -23,7 +24,7 @@ Feature: Check that Python and other languages can be used instead of Twig as a 
       | activity   | name      | course | idnumber |
       | quiz       | Test quiz | C1     | quiz1    |
     And I am on the "Course 1" "core_question > course question bank" page logged in as teacher1
-    And I disable UI plugins
+    And I disable UI plugins in the CodeRunner question type
     And I add a "CodeRunner" question filling the form with:
       | id_coderunnertype       | python3                                    |
       | id_customise            | 1                                          |
@@ -34,11 +35,11 @@ Feature: Check that Python and other languages can be used instead of Twig as a 
       | id_templateparams       | {"firstname": "twaddle", "lastname" : "twaddle" } |
       | id_templateparamslang   | None                                       |
       | id_template             |                                            |
-      | id_answer               | # Unused                                   |
       | id_iscombinatortemplate | 0                                          |
       | id_testcode_0           | # Unused                                   |
-      | id_expected_0           | True {{ firstname }} {{ lastname }}       |
-      | id_twigall              | 1                                          |
+      | id_expected_0           | True {{ firstname }} {{ lastname }}        |
+      | id_uiplugin             | none                                       |
+
     When I choose "Edit question" action for "Python preprocessor" in the question bank
     And I set the field "id_templateparams" to "import sys, json; keyvalues = {param.split('=')[0]: param.split('=')[1] for param in sys.argv[1:]}; print(json.dumps(keyvalues))"
     And I set the field "id_twigall" to "1"

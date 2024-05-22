@@ -22,8 +22,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Checks file access for CodeRunner questions.
  *
@@ -35,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param bool $forcedownload whether or not force download
  * @param array $options additional options affecting the file serving
  */
-function qtype_coderunner_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+function qtype_coderunner_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $CFG;
     require_once($CFG->libdir . '/questionlib.php');
     question_pluginfile($course, $context, 'qtype_coderunner', $filearea, $args, $forcedownload, $options);

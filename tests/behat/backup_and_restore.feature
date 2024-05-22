@@ -5,6 +5,7 @@ Feature: Duplicate a course containing a CodeRunner question
   I need to be able to back them up and restore them
 
   Background:
+    Given the CodeRunner test configuration file is loaded
     And the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
@@ -19,6 +20,8 @@ Feature: Duplicate a course containing a CodeRunner question
       | quiz       | Test quiz | C1     | quiz1    |
     And quiz "Test quiz" contains the following questions:
       | Square function | 1 |
+    And the following config values are set as admin:
+      | enableasyncbackup | 0 |
     And I am on the "Course 1" "course" page logged in as admin
 
   @javascript
@@ -39,7 +42,7 @@ Feature: Duplicate a course containing a CodeRunner question
       | id_expected_0                  | 0                                               |
       | id_display_0                   | Show                                            |
       | id_mark_0                      | 1                                               |
-      | id_ordering_0                  | 10                                               |
+      | id_ordering_0                  | 10                                              |
       | id_testcode_1                  | print(sqr(1))                                   |
       | id_expected_1                  | 1                                               |
       | id_display_1                   | Show                                            |

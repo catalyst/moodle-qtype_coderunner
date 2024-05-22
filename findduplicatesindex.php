@@ -24,7 +24,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__.'/../../../config.php');
+require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 
 // Login and check permissions.
@@ -44,7 +44,7 @@ echo $OUTPUT->heading('Courses containing CodeRunner questions');
 
 // Find in which contexts the user can edit questions.
 $questionsbycontext = $bulktester->get_num_coderunner_questions_by_context();
-$availablequestionsbycontext = array();
+$availablequestionsbycontext = [];
 foreach ($questionsbycontext as $contextid => $numcoderunnerquestions) {
     $context = context::instance_by_id($contextid);
     if (has_capability('moodle/question:editall', $context)) {
@@ -64,13 +64,15 @@ if (count($availablequestionsbycontext) == 0) {
         $name = $context->get_context_name(true, true);
         if (strpos($name, 'Course:') === 0) {
             $class = 'bulktest coderunner context quiz';
-            $findduplicatesurl = new moodle_url('/question/type/coderunner/findduplicates.php', array('contextid' => $contextid));
-            $findduplicateslink = html_writer::link($findduplicatesurl,
-                    'Find duplicates',
-                    array('title' => 'Find all duplicates in this context',
-                          'style' => $buttonstyle));
+            $findduplicatesurl = new moodle_url('/question/type/coderunner/findduplicates.php', ['contextid' => $contextid]);
+            $findduplicateslink = html_writer::link(
+                $findduplicatesurl,
+                'Find duplicates',
+                ['title' => 'Find all duplicates in this context',
+                'style' => $buttonstyle]
+            );
             $litext = $name . ' (' . $numcoderunnerquestions . ') ' . $findduplicateslink;
-            echo html_writer::start_tag('li', array('class' => $class));
+            echo html_writer::start_tag('li', ['class' => $class]);
             echo $litext;
         }
     }
