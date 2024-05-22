@@ -45,6 +45,9 @@ class walkthrough_combinator_grader_test extends \qbehaviour_walkthrough_test_ba
         global $CFG;
         parent::setUp();
         \qtype_coderunner_testcase::setup_test_sandbox_configuration();
+        if (!get_config('qtype_coderunner', 'jobesandbox_enabled')) {
+            $this->markTestSkipped("Jobe sandbox unavailable: test skipped");
+        }
     }
 
     public function test_combinator_template_grading() {
@@ -387,4 +390,6 @@ EOTEMPLATE;
             'answer' => 'def sqr(n): return n * n # resubmit']);
         $this->check_output_contains("graderstate: boomerang");
     }
+
+
 }

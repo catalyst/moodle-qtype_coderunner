@@ -42,6 +42,7 @@ class walkthrough_test extends \qbehaviour_walkthrough_test_base {
     protected function setUp(): void {
         parent::setUp();
         \qtype_coderunner_testcase::setup_test_sandbox_configuration();
+        $this->check_sandbox_enabled('jobesandbox');
     }
 
     public function test_adaptive() {
@@ -657,5 +658,12 @@ EOTEMPLATE;
     protected function get_does_not_contain_stop_button_expectation(): \question_no_pattern_expectation {
         return new \question_no_pattern_expectation('/name="' .
             $this->quba->get_field_prefix($this->slot) . '-finish"/');
+    }
+
+    // Check if a particular sandbox is enabled. Skip test if not.
+    protected function check_sandbox_enabled($sandbox): void {
+        if (!get_config('qtype_coderunner', $sandbox . '_enabled')) {
+            $this->markTestSkipped("Sandbox $sandbox unavailable: test skipped");
+        }
     }
 }

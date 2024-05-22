@@ -37,6 +37,9 @@ class walkthrough_display_feedback_test extends \qbehaviour_walkthrough_test_bas
     protected function setUp(): void {
         parent::setUp();
         \qtype_coderunner_testcase::setup_test_sandbox_configuration();
+        if (!get_config('qtype_coderunner', 'jobesandbox_enabled')) {
+            $this->markTestSkipped("Jobe sandbox unavailable: test skipped");
+        }
     }
 
 
