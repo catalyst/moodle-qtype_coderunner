@@ -44,7 +44,7 @@ class walkthrough_randomisation_test extends \qbehaviour_walkthrough_test_base {
     // questiontext test code, extra, and expected for all four possible
     // combinations.
     public function test_randomised_sqr() {
-
+        $this->check_sandbox_enabled('jobesandbox');
         $iters = 0;
         $tests = [
             ['searchfor' => 'print(mysqr(111))', 'answer' => "def mysqr(n): return n * n"],
@@ -146,5 +146,12 @@ class walkthrough_randomisation_test extends \qbehaviour_walkthrough_test_base {
                           'mark'      => 1.0,
                           'hiderestiffail'  => 0],
         ];
+    }
+
+    // Check if a particular sandbox is enabled. Skip test if not.
+    protected function check_sandbox_enabled($sandbox): void {
+        if (!get_config('qtype_coderunner', $sandbox . '_enabled')) {
+            $this->markTestSkipped("Sandbox $sandbox unavailable: test skipped");
+        }
     }
 }
