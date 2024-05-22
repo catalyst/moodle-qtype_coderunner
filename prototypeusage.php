@@ -26,7 +26,7 @@
 
 define('NO_OUTPUT_BUFFERING', true);
 
-require_once(__DIR__.'/../../../config.php');
+require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->dirroot . '/question/type/coderunner/questiontype.php');
 
@@ -63,14 +63,14 @@ if (!has_capability('moodle/question:editall', $coursecontext)) {
 
     // Analyse the prototype usage.
 
-    $missing = array();
+    $missing = [];
     foreach ($questions as $id => $question) {
         $type = $question->coderunnertype;
         if (!isset($prototypes[$type])) {
             if (isset($missing[$type])) {
                 $missing[$type][] = $question;
             } else {
-                $missing[$type] = array($question);
+                $missing[$type] = [$question];
             }
         } else {
             if ($question->prototypetype != 0) {
@@ -80,7 +80,7 @@ if (!has_capability('moodle/question:editall', $coursecontext)) {
             if (isset($prototypes[$type]->usages)) {
                 $prototypes[$type]->usages[] = $question;
             } else {
-                $prototypes[$type]->usages = array($question);
+                $prototypes[$type]->usages = [$question];
             }
         }
     }

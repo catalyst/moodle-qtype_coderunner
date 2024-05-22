@@ -15,6 +15,8 @@
 // along with Stack.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Find all the uses of all the prototypes.
+ *
  * This script scans all question categories to which the current user
  * has access and builds a table showing all available prototypes and
  * the questions using those prototypes.
@@ -24,7 +26,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__.'/../../../config.php');
+require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 
 // Login and check permissions.
@@ -52,14 +54,18 @@ foreach ($allcourses as $course) {
     }
     $contextid = $course->contextid;
     $context = context::instance_by_id($contextid);
-    echo html_writer::tag('li',
+    echo html_writer::tag(
+        'li',
         html_writer::link(
-            new moodle_url('/question/type/coderunner/prototypeusage.php',
-                array('courseid' => $course->id,
+            new moodle_url(
+                '/question/type/coderunner/prototypeusage.php',
+                ['courseid' => $course->id,
                       'contextid' => $contextid,
-                      'coursename' => $course->name)),
-                $course->name
-            ));
+                'coursename' => $course->name]
+            ),
+            $course->name
+        )
+    );
 }
 
 echo html_writer::end_tag('ul');
